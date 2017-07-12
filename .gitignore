@@ -9,3 +9,4 @@ target/
 saddle-test-framework/target
 saddle-hdf5/target
 saddle-core/target
+*.sc
