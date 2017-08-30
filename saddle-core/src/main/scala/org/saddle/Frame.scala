@@ -604,13 +604,12 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def mapSingleCol(key: CX)(fn: T => T): Frame[RX, CX, T] = {
-    val loc = colIx(key)
-    if (loc.isEmpty)
+    val loc = colIx.getFirst(key)
+    if (loc < 0)
       this
     else {
-      val colLocation = loc.head
-      val colMap: Vec[T] = values.cols(colLocation).map(fn)
-      Frame(values.cols.updated(loc.head, colMap), rowIx, colIx)
+      val colMap: Vec[T] = values.cols(loc).map(fn)
+      Frame(values.cols.updated(loc, colMap), rowIx, colIx)
     }
   }
 
@@ -630,6 +629,45 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
   }
 
   /**
+   * Update a column key with a vector of the same size
+   *
+   * @param key
+   * @param col
+   * @return
+   */
+  def updateCol(key: CX, col: Vec[T]): Frame[RX, CX, T] = {
+    require(col.length == rowIx.length, "vector length bigger than frame's number of vectors")
+    val rix = colIx.getFirst(key)
+    if(rix < 0)
+      this
+    else
+      Frame(values.cols.updated(rix,col), rowIx, colIx)
+  }
+
+  /**
+   * Update a column index with a vector of the same size
+   *
+   * @param key
+   * @param col
+   * @return
+   */
+  def updateCol(key: Int, col: Vec[T]): Frame[RX, CX, T] = {
+    require(col.length == rowIx.length, "too many rows on vector")
+    require(0 <= key && key < colIx.length, "Index exceeds col")
+    Frame(values.cols.updated(key,col), rowIx, colIx)
+  }
+
+  @tailrec private def mapCols(cols: IndexedSeq[Vec[T]],
+    indexes: List[Int],
+    fn: T => T): IndexedSeq[Vec[T]] = {
+    indexes match {
+      case Nil => cols
+      case x :: xs =>
+        mapCols(cols.updated(x, cols(x).map(fn)), xs, fn)
+    }
+  }
+
+  /**
    * Map a function over the column index values.
    * Potentially does not map anything if said column does not exist
    *
@@ -638,21 +676,24 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def mapColValues(keys: CX*)(fn: T => T): Frame[RX, CX, T] = {
-    @tailrec def mapCols(cols: IndexedSeq[Vec[T]],
-      indexes: List[Int]): IndexedSeq[Vec[T]] = {
-      indexes match {
-        case Nil => cols
-        case x :: xs =>
-          mapCols(cols.updated(x, cols(x).map(fn)), xs)
-      }
-    }
-
     val loc = colIx(keys.toArray)
     if (loc.isEmpty)
       this
     else {
-      Frame(new MatCols[T](mapCols(values, loc.toList)), rowIx, colIx)
+      Frame(new MatCols[T](mapCols(values, loc.toList, fn)), rowIx, colIx)
     }
+  }
+
+  /**
+   * Map a function over the column index values from the array
+   * Potentially does not map anything if said column does not exist
+   *
+   * @param keys the keys to map
+   * @param fn
+   * @return
+   */
+  def mapColValues(keys: Array[Int])(fn: T => T): Frame[RX, CX, T] = {
+    Frame(new MatCols[T](mapCols(values, keys.toList, fn)), rowIx, colIx)
   }
 
   /**
@@ -686,11 +727,11 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def yank(key: CX)(value: T): Frame[RX, CX, T] = {
-    val loc = colIx(key)
-    if (loc.isEmpty)
+    val loc = colIx.getFirst(key)
+    if (loc < 0)
       this
     else {
-      val yankVec = values.cols(loc.head)
+      val yankVec = values.cols(loc)
       rowAt(yankIxIfExists(yankVec, yankVec.length - 1, Nil, value))
     }
   }
@@ -702,7 +743,7 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @param value
    * @return
    */
-  def yank(key: Int)(value: T): Frame[RX, CX, T] = {
+  def yankI(key: Int)(value: T): Frame[RX, CX, T] = {
     val yankVec = values.cols(key)
     rowAt(yankIxIfExists(yankVec, yankVec.length - 1, Nil, value))
   }
@@ -717,7 +758,7 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
     if (colIx.contains(key)) {
       val loc = colIx(key).head
       val yankVec = values.cols(loc).toSeq.distinct
-      yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yank(loc)(b) :: a)
+      yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(loc)(b) :: a)
     } else Nil
   }
 
@@ -727,11 +768,15 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @param key
    * @return
    */
-  def yankDistinct(key: Int): List[Frame[RX, CX, T]] = {
+  def yankDistinctI(key: Int): List[Frame[RX, CX, T]] = {
     require(0<= key && key < colIx.length)
     val yankVec = values.cols(key).toSeq.distinct
-    yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yank(key)(b) :: a)
+    yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(key)(b) :: a)
   }
+
+  /*
+  Experimental, untested
+   */
 
   /**
    * Create a new Frame whose values are the same, but whose row index has been changed

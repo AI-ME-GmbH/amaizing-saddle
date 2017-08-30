@@ -13,10 +13,10 @@ lazy val scalacOpts = scalacOptions ++= Seq(
 
 lazy val commonSettings = Seq(
   organization := "org.amaizing",
-  scalaVersion := "2.12.1",
+  scalaVersion := "2.12.3",
   libraryDependencies ++= Seq(
-    "org.specs2" %% "specs2-core" % "3.9.1",
-    "org.specs2" %% "specs2-scalacheck" % "3.9.1"
+    "org.specs2" %% "specs2-core" % "3.9.1" % "test",
+    "org.specs2" %% "specs2-scalacheck" % "3.9.1" % "test"
   ),
   resolvers ++= Seq(
     "scalaz-bintray" at "http://dl.bintray.com/scalaz/releases",
@@ -47,23 +47,11 @@ lazy val core = Project(id = "saddle-core", base = file("saddle-core"))
     "com.googlecode.efficient-java-matrix-library" % "ejml" % "0.19",
     "org.apache.commons" % "commons-math" % "2.2",
     "it.unimi.dsi" % "fastutil" % "6.5.4",
-    "it.unimi.dsi" % "dsiutils" % "2.0.15"))
-
-lazy val hdf5 = Project(id = "saddle-hdf5",
-  base = file("saddle-hdf5"))
-  .settings(commonSettings)
-  .settings(Seq(
-    initialCommands := """
-                         |import org.joda.time.DateTime
-                         |import org.saddle._
-                         |import org.saddle.time._
-                         |import org.saddle.io._""".stripMargin('|'),
-    libraryDependencies ++= Seq(
-      "org.specs2" %% "specs2-junit" % "3.9.1",
-      "org.scala-saddle" % "jhdf5" % "2.9"
-    ),
-    testOptions in Test += Tests.Argument("console", "junitxml")
-  )).dependsOn(core)
+    "it.unimi.dsi" % "dsiutils" % "2.0.15",
+    "com.github.nscala-time" %% "nscala-time" % "2.16.0"),
+    assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false),
+    assemblyJarName in assembly := "saddle.jar"
+  )
 
 lazy val test_framework =
   Project(
