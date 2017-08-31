@@ -44,4 +44,4 @@ Copyright
 All forked code is under the apache license. All new code will continue to be under the apache license.
 The maintainer(s) of this fork hold no liability, yadda yadda.
 
-All new code doesn't require that ridiculous header nonsense. It's free software, that's all there is to it.
+While all code is under the apache license, I will not force a new copyright header.

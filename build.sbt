@@ -11,7 +11,7 @@ lazy val scalacOpts = scalacOptions ++= Seq(
 )
 
 lazy val commonSettings = Seq(
-  organization := "io.amaizing",
+  organization := "io.github.amaizing",
   scalaVersion := "2.12.3",
   libraryDependencies ++= Seq(
     "org.specs2" %% "specs2-core" % "3.9.1" % "test",
