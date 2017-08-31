@@ -30,22 +30,22 @@ class LocatorLong(sz: Int = Locator.INIT_CAPACITY) extends Locator[Long] {
 
   def get(key: Long): Int = map.get(key)
 
-  def put(key: Long, value: Int) {
+  def put(key: Long, value: Int): Unit = {
     // prevents unboxing!
     val tmp = map.put(key, value)
   }
 
-  def contains(key: Long) = map.containsKey(key)
+  def contains(key: Long): Boolean = map.containsKey(key)
 
-  def size = map.size()
+  def size: Int = map.size()
 
-  def keys() = map.keySet().toLongArray
+  def keys(): Array[Long] = map.keySet().toLongArray
 
   def inc(key: Long): Int = cts.addTo(key, 1)
 
-  def count(key: Long) = cts.get(key)
+  def count(key: Long): Int = cts.get(key)
 
-  def counts() = {
+  def counts(): Array[Int] = {
     val iter = map.keySet().iterator()
     val res  = Array.ofDim[Int](size)
     var i = 0

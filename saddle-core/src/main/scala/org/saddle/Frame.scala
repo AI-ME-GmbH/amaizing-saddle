@@ -27,6 +27,7 @@ import java.io.OutputStream
 import org.saddle.mat.MatCols
 
 import scala.annotation.tailrec
+import scala.collection.{Map, mutable}
 
 /**
  * `Frame` is an immutable container for 2D data which is indexed along both axes
@@ -542,10 +543,8 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
   /**
    * Overloaded method to create hierarchical index from two cols.
    */
-  def withRowIndex(col1: Int, col2: Int)(
-    implicit ordT: ORD[T]): Frame[(T, T), CX, T] = {
-    val newIx: Index[(T, T)] =
-      Index.make(this.colAt(col1).toVec, this.colAt(col2).toVec)
+  def withRowIndex(col1: Int, col2: Int)(implicit ordT: ORD[T]): Frame[(T, T), CX, T] = {
+    val newIx: Index[(T, T)] = Index.make(this.colAt(col1).toVec, this.colAt(col2).toVec)
     this.setRowIndex(newIx).filterAt { case c => !Set(col1, col2).contains(c) }
   }
 
@@ -772,6 +771,16 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
     require(0<= key && key < colIx.length)
     val yankVec = values.cols(key).toSeq.distinct
     yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(key)(b) :: a)
+  }
+
+  def yankDistinctM(key: CX): mutable.Map[T, Frame[RX, CX, T]] = {
+    if (colIx.contains(key)) {
+      val loc = colIx(key).head
+      val yankVec = values.cols(loc).toSeq.distinct
+      val yankMap = mutable.HashMap.empty[T, Frame[RX, CX, T]]
+      yankVec.foreach(b => yankMap += (b -> yankI(loc)(b)))
+      yankMap
+    } else mutable.HashMap.empty[T, Frame[RX, CX, T]]
   }
 
   /*

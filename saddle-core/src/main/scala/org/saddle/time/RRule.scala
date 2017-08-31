@@ -17,7 +17,7 @@
 package org.saddle.time
 
 import org.joda.time.{Seconds, Days, DateTimeZone, DateTime}
-import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 import com.google.ical.iter.{RecurrenceIterator, RecurrenceIteratorFactory}
 import com.google.ical.compat.jodatime.DateTimeIteratorFactory
 import org.saddle.Index
@@ -263,7 +263,7 @@ case class RRule private (freq: Frequency = DAILY,
       RecurrenceIteratorFactory.except(i1, tmpiter)
     }
 
-    DateTimeIteratorFactory.createDateTimeIterator(iterWithJoinsWithExcepts) map { dt => dt.withZone(inzone) }
+    DateTimeIteratorFactory.createDateTimeIterator(iterWithJoinsWithExcepts).asScala.map { dt => dt.withZone(inzone) }
   }
 
   override def toString = toICal.toIcal
