@@ -773,6 +773,18 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
     yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(key)(b) :: a)
   }
 
+  /**
+   * Similar to yank distinct, however, we preserve each new frame with a
+   * key value pointing to the corresponding new value yanked from it.
+   * i.e
+   * Frame("a" -> Vec(2,3,4), "b" -> Vec(1,2,3)).yankDistinctM("a")
+   * would yield
+   * List(Map(1 -> Frame("a" -> Vec(2), "b" -> Vec(1)), ... etc
+   *
+   *
+   * @param key
+   * @return
+   */
   def yankDistinctM(key: CX): mutable.Map[T, Frame[RX, CX, T]] = {
     if (colIx.contains(key)) {
       val loc = colIx(key).head
