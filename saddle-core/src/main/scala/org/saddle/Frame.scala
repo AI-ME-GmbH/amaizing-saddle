@@ -622,9 +622,12 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def mapSingleCol(key: Int)(fn: T => T): Frame[RX, CX, T] = {
-    require(0 <= key && key < colIx.length)
-    val colMap: Vec[T] = values.cols(key).map(fn)
-    Frame(values.cols.updated(key, colMap), rowIx, colIx)
+    if (0 > key || key >= colIx.length)
+      this
+    else {
+      val colMap: Vec[T] = values.cols(key).map(fn)
+      Frame(values.cols.updated(key, colMap), rowIx, colIx)
+    }
   }
 
   /**
@@ -635,12 +638,15 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def updateCol(key: CX, col: Vec[T]): Frame[RX, CX, T] = {
-    require(col.length == rowIx.length, "vector length bigger than frame's number of vectors")
-    val rix = colIx.getFirst(key)
-    if(rix < 0)
+    if (col.length != rowIx.length)
       this
-    else
-      Frame(values.cols.updated(rix,col), rowIx, colIx)
+    else {
+      val rix = colIx.getFirst(key)
+      if (rix < 0)
+        this
+      else
+        Frame(values.cols.updated(rix, col), rowIx, colIx)
+    }
   }
 
   /**
@@ -651,9 +657,10 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def updateCol(key: Int, col: Vec[T]): Frame[RX, CX, T] = {
-    require(col.length == rowIx.length, "too many rows on vector")
-    require(0 <= key && key < colIx.length, "Index exceeds col")
-    Frame(values.cols.updated(key,col), rowIx, colIx)
+    if (col.length == rowIx.length || key < 0 || key >= colIx.length)
+      this
+    else
+      Frame(values.cols.updated(key, col), rowIx, colIx)
   }
 
   @tailrec private def mapCols(cols: IndexedSeq[Vec[T]],
@@ -768,9 +775,14 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def yankDistinctI(key: Int): List[Frame[RX, CX, T]] = {
-    require(0<= key && key < colIx.length)
-    val yankVec = values.cols(key).toSeq.distinct
-    yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(key)(b) :: a)
+    if (key < 0 || key >= colIx.length)
+      Nil
+    else {
+      val yankVec = values.cols(key).toSeq.distinct
+      yankVec
+        .foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(key)(b) :: a)
+        .reverse
+    }
   }
 
   /**
