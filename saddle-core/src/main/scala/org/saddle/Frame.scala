@@ -657,7 +657,7 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
    * @return
    */
   def updateCol(key: Int, col: Vec[T]): Frame[RX, CX, T] = {
-    if (col.length == rowIx.length || key < 0 || key >= colIx.length)
+    if (col.length != rowIx.length || key < 0 || key >= colIx.length)
       this
     else
       Frame(values.cols.updated(key, col), rowIx, colIx)
