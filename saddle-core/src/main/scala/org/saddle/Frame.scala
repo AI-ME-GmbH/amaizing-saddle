@@ -757,7 +757,7 @@ class Frame[RX: ST: ORD, CX: ST: ORD, T: ST](
     if (colIx.contains(key)) {
       val loc = colIx(key).head
       val yankVec = values.cols(loc).toSeq.distinct
-      yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(loc)(b) :: a)
+      yankVec.foldLeft(Nil: List[Frame[RX, CX, T]])((a, b) => yankI(loc)(b) :: a).reverse
     } else Nil
   }
 

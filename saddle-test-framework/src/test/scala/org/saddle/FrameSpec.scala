@@ -16,6 +16,7 @@
 
 package org.saddle
 
+import org.saddle.scalar.Scalar
 import org.specs2.mutable.Specification
 
 /**
@@ -50,4 +51,24 @@ class FrameSpec extends Specification {
     df2.colType[Int] must_!= Frame.empty[Int, Int, Int]
     df2.colType[String] must_!= Frame.empty[Int, Int, String]
   }
+
+  "yank should extract properly" in {
+    val fr = Frame("a" -> Vec(1,2,3,1), "b" -> Vec(1,2,3,4))
+    val yanked: Frame[Int, String, Int] = fr.yank("a")(1)
+    yanked.at(1,1) must_== Scalar(4)
+  }
+
+  "yankDistinct should extract properly" in {
+    val fr = Frame("a" -> Vec(1,2,3), "b" -> Vec(1,2,3))
+    val yanked: List[Frame[Int, String, Int]] = fr.yankDistinct("a")
+    yanked.length must_== 3
+    yanked.head.at(0, 0) must_== Scalar(1)
+  }
+
+  "mapColValues works" in {
+    val fr = Frame("a" -> Vec(1,2,3), "b" -> Vec(1,2,3))
+    fr.mapSingleCol("a")(_ + 1) must_== Frame("a" -> Vec(2,3,4), "b" -> Vec(1,2,3))
+    fr.mapColValues("a","b")(_ + 2) must_== Frame("a" -> Vec(3,4,5), "b" -> Vec(3,4,5))
+  }
+
 }
