@@ -416,6 +416,50 @@ trait Vec[@spec(Boolean, Int, Long, Double) T] extends NumericOps[Vec[T]] with S
   def shift(n: Int): Vec[T]
 
   /**
+   * Creates a concrete vector from the original.
+   *
+   * @param n
+   * @param transform
+   * @return
+   */
+  def shiftWithF(n: Int, transform: T => T): Vec[T] = {
+    val len = length
+
+    @scala.annotation.tailrec def shiftForwardTailRec(ix: Int, array: Array[T]): Array[T] = {
+      if(ix >= len)
+        array
+      else {
+        array(ix) = transform(array(ix-1))
+        shiftForwardTailRec(ix+1, array)
+      }
+    }
+
+    @scala.annotation.tailrec def shiftBackwardTailRec(ix: Int, array: Array[T]): Array[T] = {
+      if(ix < 0)
+        array
+      else {
+        array(ix) = transform(array(ix+1))
+        shiftBackwardTailRec(ix-1,array)
+      }
+    }
+
+
+    if(n == 0){
+      this
+    } else if (math.abs(n) >= len)
+      shift(n)
+    else if(n < 0) {
+      val startIx = len + n
+      val shiftedArray = shift(n).toArray
+      Vec(shiftForwardTailRec(startIx, shiftedArray))(scalarTag)
+    } else {
+      val startIx = n - 1
+      val shiftedArray = shift(n).toArray
+      Vec(shiftBackwardTailRec(startIx, shiftedArray))(scalarTag)
+    }
+  }
+
+  /**
    * Replaces all NA values for which there is a non-NA value at a lower offset
    * with the corresponding highest-offset, non-NA value. E.g,
    *
