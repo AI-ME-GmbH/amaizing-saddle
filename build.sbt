@@ -22,7 +22,7 @@ lazy val commonSettings = Seq(
     Resolver.jcenterRepo,
     "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/"
   ),
-  version := "0.0.1-SNAPSHOT",
+  version := "0.0.1",
   packageOptions in assembly ~= { pos =>
     pos.filterNot { po =>
       po.isInstanceOf[Package.MainClass]
@@ -37,7 +37,7 @@ lazy val root = Project(id = "saddle", base = file("."))
   .settings(commonSettings)
   .aggregate(core, test_framework)
 
-lazy val core = Project(id = "saddle-core", base = file("saddle-core"))
+lazy val core = Project(id = "amaizing-saddle", base = file("saddle-core"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
@@ -50,34 +50,39 @@ lazy val core = Project(id = "saddle-core", base = file("saddle-core"))
       "it.unimi.dsi" % "dsiutils" % "2.0.15",
       "com.github.nscala-time" %% "nscala-time" % "2.16.0"
     ),
-    assemblyOption in assembly := (assemblyOption in assembly).value
-      .copy(includeScala = false),
+    assemblyOption in assembly := (assemblyOption in assembly).value.copy(
+      includeScala = false),
     assemblyJarName in assembly := "saddle.jar",
     publishArtifact in Test := false,
-    publishMavenStyle := true,
-    publishArtifact in Test := false,
-    pomExtra := (<url>https://github.com/amaizing/amaizing-saddle</url>
-        <licenses>
-          <license>
-            <name>Apache 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.html</url>
-            <distribution>repo</distribution>
-          </license>
-        </licenses>
-        <scm>
-          <url>git@github.com:amaizing/amaizing-saddle.git</url>
-          <connection>scm:git:git@github.com:amaizing/amaizing-saddle.git</connection>
-        </scm>
-        <developers>
-          <developer>
-            <id>jmcardon</id>
-            <name>Jose Cardona</name>
-            <url>https://github.com/jmcardon</url>
-          </developer>
-        </developers>),
-    publishTo := Some(
-      "snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+    publishMavenStyle := true
   )
+  .settings(publishSettings)
+
+lazy val publishSettings = Seq(
+  homepage := Some(url("https://github.com/amaizing/amaizing-saddle")),
+  licenses := Seq(
+    "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0")),
+  scmInfo := Some(
+    ScmInfo(url("https://github.com/amaizing/amaizing-saddle"),
+            "scm:git:git@github.com:amaizing/amaizing-saddle.git")),
+  autoAPIMappings := true,
+  apiURL := None,
+  bintrayRepository := "amaizing-saddle",
+  bintrayOrganization := Some("amaizing"),
+  pomExtra :=
+    <developers>
+    <developer>
+      <id>jmcardon</id>
+      <name>Jose Cardona</name>
+      <url>https://github.com/jmcardon/</url>
+    </developer>
+    <developer>
+      <id>rsoeldner</id>
+      <name>Robert Soeldner</name>
+      <url>https://github.com/rsoeldner/</url>
+    </developer>
+  </developers>
+)
 
 lazy val test_framework =
   Project(id = "saddle-test-framework", base = file("saddle-test-framework"))
